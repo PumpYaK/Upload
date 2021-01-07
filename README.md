@@ -1,70 +1,55 @@
-# Upload
-
 ```lua
---Client
-local UserInputService = game:GetService("UserInputService")
-local Player = game.Players.LocalPlayer
-local Mouse = Player:GetMouse()
-local Tool = script.Parent
-local Character = Player.Character or Player.CharacterAdded:wait()
-local Animation = Character:WaitForChild("Humanoid").Animator:LoadAnimation(script.Parent.SwingAnimation)
+--[[
+DetectCharacterEdits Patches:
+Invisible flings, Fe godmode, Certain fly exploits, Fe hat droppers, Most fe character exploits
+]]
 
-local Connection1 ; local Connection2
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
 
-local Debounce = false
-Connection1 = Tool.Activated:Connect(function()
-	if Debounce == false then
-		Debounce = true
-		Animation:Play()
-		local Target = Mouse.Target
-		if Target then
-			if Target.Parent:FindFirstChild("Health") then
-				if Target.Parent.Name ~= "Tree" then
-					local distanceFromItem = Player:DistanceFromCharacter(Mouse.Target.Position)
-					if distanceFromItem < 7 then
-						game.ReplicatedStorage.HitItem:InvokeServer(Target.Parent, 15)
-						wait(0.5)
-						Animation:Stop()
-					end
+game.Players.PlayerAdded:Connect(function(Player)
+	local Character = Player.Character or Player.CharacterAdded:wait()
+	local Humanoid = Character:WaitForChild("Humanoid")
+	local Connection1 ; local Connection2 ; local Connection3 ; local Connection4 ; local Connection5 ; local Connection6 ; local Connection7
+	Connection1 = game:GetService("RunService").Heartbeat:Connect(function()
+		Character = Player.Character or Player.CharacterAdded:wait()
+		Humanoid  = Character:WaitForChild("Humanoid")
+		if Humanoid then    
+			Connection2 = Humanoid.AncestryChanged:Connect(function(_,NewParent)
+				if not NewParent then
+					Connection1:Disconnect()
+					Connection2:Disconnect()
 				end
-			end
-		end
-		wait(0.5)
-		Animation:Stop()
-		Debounce = false
-	end
-end)
-
-Connection2 = Character.Humanoid.Died:Connect(function()
-	Connection1:Disconnect()
-	Connection2:Disconnect()
-end)
-```
-
-```lua
---Server
-game.ReplicatedStorage.HitItem.OnServerInvoke = function(player, itemtohit, damage)
-	if itemtohit then
-		local Name = itemtohit.Name
-		if itemtohit:FindFirstChild("Health") then
-			if itemtohit.Health.Value >= 1 then
-				itemtohit.Health.Value -= damage
-				return Name
-			else
-				local item = ItemDrops[itemtohit.Name]
-				for i,v in pairs(item) do
-					local clone = v:Clone()
-					local item
-					for e,c in pairs(itemtohit:GetChildren()) do
-						if c:IsA("Part") or c:IsA("UnionOperation") then
-							clone.CFrame = c.CFrame
-						end
-					end
+			end)
+			Connection5 = Character.ChildRemoved:Connect(function(Object)
+				if Object:IsA("Humanoid") and Character:IsDescendantOf(workspace) and not Character:FindFirstChildOfClass("Humanoid") then
+					Player:LoadCharacter()
 				end
-				itemtohit:Destroy()	
-				return Name
-			end
+			end)
+			Connection6 = Character.ChildAdded:Connect(function(Object)
+				Object:GetPropertyChangedSignal("Parent"):Connect(function()
+					if Object.Parent == workspace then
+						--Flag the player
+					end
+					if not Object:IsDescendantOf(Character) then
+						Object:Destroy()
+					end
+				end)
+			end)
+			Connection7 = Humanoid.Died:Connect(function()
+				Connection5:Disconnect()
+				Connection6:Disconnect()
+				Connection7:Disconnect()
+			end)
+		else
+			Player:LoadCharacter()
 		end
-	end
-end
+	end)
+	Connection4 = game.Players.PlayerRemoving:Connect(function(player2)
+		if player2.Name == Player.Name then
+			Connection1:Disconnect()
+			Connection4:Disconnect()
+		end
+	end)
+end)
 ```
